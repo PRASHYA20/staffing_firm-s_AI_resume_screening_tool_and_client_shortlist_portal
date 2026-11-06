@@ -32,6 +32,7 @@ export default function App() {
   // Authenticated User Session
   const [currentUser, setCurrentUser] = useState(() => getStoredSession());
   const currentRole = currentUser?.role || null; // 'admin', 'recruiter', 'client', or null if signed out
+  const [signInInitialRole, setSignInInitialRole] = useState('recruiter');
 
   // Active workspace tab
   const [activeTab, setActiveTab] = useState(() => {
@@ -115,7 +116,7 @@ export default function App() {
   };
 
   // Sign Out Handler
-  const handleSignOut = () => {
+  const handleSignOut = (targetPortalRole = null) => {
     if (currentUser) {
       logAudit(
         'AUTH-GATEWAY', 
@@ -132,36 +133,19 @@ export default function App() {
     }
     clearStoredSession();
     setCurrentUser(null);
-    triggerToast('Signed out successfully. Choose a portal to continue.', 'info');
+    if (targetPortalRole) {
+      let roleKey = targetPortalRole;
+      if (roleKey === 'delivery-head') roleKey = 'delivery_head';
+      setSignInInitialRole(roleKey);
+      triggerToast(`Signed out. Please enter credentials for the ${targetPortalRole} portal.`, 'info');
+    } else {
+      triggerToast('Signed out successfully. Choose a portal to continue.', 'info');
+    }
   };
 
-  // Fast Switch Role Handler (for seamless evaluation/testing)
+  // Switch Portal Handler - Requires authenticating with that portal's credentials
   const handleSwitchRole = (newRole) => {
-    let roleKey = newRole;
-    if (roleKey === 'delivery-head') roleKey = 'delivery_head';
-    const account = DEMO_ACCOUNTS[roleKey];
-    if (!account) return;
-    const { password: _, ...safeUser } = account;
-    setCurrentUser(safeUser);
-    setStoredSession(safeUser);
-    
-    const nextTab = safeUser.role === 'admin' 
-      ? 'dpdp-compliance'
-      : (safeUser.role === 'delivery-head' || safeUser.role === 'delivery_head')
-        ? 'delivery-dashboard'
-        : safeUser.role === 'client' 
-          ? 'client-portal' 
-          : 'ranked-list';
-    
-    setActiveTab(nextTab);
-    logAudit(
-      'AUTH-GATEWAY', 
-      safeUser.name, 
-      'AUTH_SWITCH_ROLE', 
-      `Portal switched to ${safeUser.badgeText}`, 
-      'COMPLIANT_AUTH_GATE'
-    );
-    triggerToast(`Switched portal to ${safeUser.badgeText} (${safeUser.name})`, 'info');
+    handleSignOut(newRole);
   };
 
   // Screen 1: Update scorecard
@@ -447,6 +431,7 @@ export default function App() {
         onSignIn={handleSignIn} 
         theme={theme} 
         setTheme={setTheme} 
+        initialRole={signInInitialRole}
       />
     );
   }
@@ -504,6 +489,7 @@ export default function App() {
             onClientReject={handleClientReject}
             onProposeInterview={handleProposeInterview}
             currentReq={currentReq}
+            currentUser={currentUser}
           />
         )}
 

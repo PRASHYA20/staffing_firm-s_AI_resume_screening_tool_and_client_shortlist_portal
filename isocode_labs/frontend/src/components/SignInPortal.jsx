@@ -1,4 +1,5 @@
-// SignInPortal.jsx - Dedicated Multi-Role Sign In for Admin, Recruiter, and Client
+// SignInPortal.jsx - Production-Ready Multi-Role Sign In for Admin, Recruiter, Delivery Head, and Client
+// Enforces manual credential entry, distinct separate credentials per portal, and mobile-optimized role selection.
 import React, { useState } from 'react';
 import {
   ShieldCheck,
@@ -15,21 +16,23 @@ import {
   AlertCircle,
   Sun,
   Moon,
-  Info
+  Info,
+  Users,
+  ChevronDown
 } from 'lucide-react';
 import { DEMO_ACCOUNTS, authenticateUserLocally } from '../data/authUsers';
 
-export default function SignInPortal({ onSignIn, theme, setTheme }) {
-  const [selectedRole, setSelectedRole] = useState('recruiter'); // 'admin', 'recruiter', 'client'
+export default function SignInPortal({ onSignIn, theme, setTheme, initialRole = 'recruiter' }) {
+  const [selectedRole, setSelectedRole] = useState(initialRole); // 'recruiter', 'client', 'delivery_head', 'admin'
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const activeAccount = DEMO_ACCOUNTS[selectedRole];
+  const activeAccount = DEMO_ACCOUNTS[selectedRole] || DEMO_ACCOUNTS.recruiter;
 
-  // When switching portal tab, clear error and optionally keep or reset inputs
+  // When switching portal tab, clear error and reset inputs for clean manual entry
   const handleRoleChange = (role) => {
     setSelectedRole(role);
     setErrorMessage('');
@@ -37,62 +40,19 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
     setPassword('');
   };
 
-  // 1-Click Quick Demo Sign In
-  const handleQuickDemoSignIn = (roleToLogin = selectedRole) => {
-    const acc = DEMO_ACCOUNTS[roleToLogin];
-    if (!acc) return;
-    setErrorMessage('');
-    setIsLoading(true);
-
-    setTimeout(() => {
-      // Try backend first; fallback to local
-      fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          role: acc.role,
-          identifier: acc.email,
-          password: acc.password
-        })
-      })
-        .then(res => res.json())
-        .then(data => {
-          setIsLoading(false);
-          if (data.success && data.user) {
-            onSignIn(data.user);
-          } else {
-            // Local fallback
-            const localRes = authenticateUserLocally(acc.role, acc.email, acc.password);
-            if (localRes.success) {
-              onSignIn(localRes.user);
-            } else {
-              setErrorMessage(localRes.message);
-            }
-          }
-        })
-        .catch(() => {
-          // Fallback for offline backend
-          setIsLoading(false);
-          const localRes = authenticateUserLocally(acc.role, acc.email, acc.password);
-          if (localRes.success) {
-            onSignIn(localRes.user);
-          } else {
-            setErrorMessage(localRes.message);
-          }
-        });
-    }, 250);
-  };
-
-  // Form submission
+  // Manual Form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     setErrorMessage('');
 
-    if (!identifier.trim()) {
-      setErrorMessage('Please enter your email address or username.');
+    const cleanId = identifier.trim();
+    const cleanPass = password.trim();
+
+    if (!cleanId) {
+      setErrorMessage(`Please enter your ${activeAccount.badgeText} email address or username.`);
       return;
     }
-    if (!password.trim()) {
+    if (!cleanPass) {
       setErrorMessage('Please enter your account password.');
       return;
     }
@@ -104,8 +64,8 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         role: selectedRole,
-        identifier: identifier.trim(),
-        password: password.trim()
+        identifier: cleanId,
+        password: cleanPass
       })
     })
       .then(res => res.json())
@@ -119,7 +79,7 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
       })
       .catch(() => {
         setIsLoading(false);
-        const localRes = authenticateUserLocally(selectedRole, identifier, password);
+        const localRes = authenticateUserLocally(selectedRole, cleanId, cleanPass);
         if (localRes.success) {
           onSignIn(localRes.user);
         } else {
@@ -128,11 +88,29 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
       });
   };
 
-  // Quick fill helper
-  const handleAutofill = () => {
-    setIdentifier(activeAccount.email);
-    setPassword(activeAccount.password);
-    setErrorMessage('');
+  // Helper placeholder text based on selected role
+  const getPlaceholderText = () => {
+    if (selectedRole === 'client') return 'client@clientcorp.in or username "client"';
+    if (selectedRole === 'recruiter') return 'recruiter@talentpulse.ai or username "recruiter"';
+    if (selectedRole === 'delivery_head' || selectedRole === 'delivery-head') return 'delivery@talentpulse.ai or username "delivery"';
+    if (selectedRole === 'admin') return 'admin@talentpulse.ai or username "admin"';
+    return 'Enter your email or username';
+  };
+
+  // Plain-English guidance for mobile users to quickly pick the right role
+  const getRoleHelpText = (role) => {
+    switch (role) {
+      case 'client':
+        return 'For Corporate Hiring Partners & Interviewers. Review masked candidate profiles, compare dossiers, and confirm interview slots.';
+      case 'delivery_head':
+      case 'delivery-head':
+        return 'For Staffing Operations Leaders. Monitor 48-hour SLA metrics, recruiter throughput, and value-recovered ledger.';
+      case 'admin':
+        return 'For Data Protection Officers & Admins. Manage DPDP Act statutory compliance, consent records, and right-to-erasure.';
+      case 'recruiter':
+      default:
+        return 'For Staffing Agency Recruiters. Configure dynamic JD scorecards, screen uploaded CVs, and verify candidates.';
+    }
   };
 
   return (
@@ -142,7 +120,7 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
         <div className="minimal-brand">
           <div className="brand-dot" />
           <span className="brand-name">TalentPulse AI</span>
-          <span className="brand-badge-pill">Enterprise Staffing & Screening</span>
+          <span className="brand-badge-pill">Enterprise Staffing & Screening Portal</span>
         </div>
 
         <button
@@ -158,14 +136,107 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
       <main className="signin-content">
         <div className="signin-hero-intro">
           <span className="signin-kicker">Role-Based Access Control (RBAC)</span>
-          <h1 className="signin-title">Select Your Sign-In Portal</h1>
+          <h1 className="signin-title">Select Your Authorized Portal</h1>
           <p className="signin-subtitle">
-            Secure, separate authentication gateways tailored for Admins, Recruiters, and Client Hiring Partners.
+            Secure, separate authentication gateways with dedicated credentials for Recruiters, Client Hiring Partners, and Leadership.
           </p>
         </div>
 
-        {/* 4 Dedicated Role Selector Tabs */}
-        <div className="signin-role-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))' }}>
+        {/* ------------------------------------------------------------- */}
+        {/* 1. MOBILE ROLE SELECTOR: Optimized for Phones & Small Screens */}
+        {/* ------------------------------------------------------------- */}
+        <div className="mobile-role-selector-wrapper">
+          <div className="mobile-role-selector-header">
+            <label htmlFor="mobile-role-select" className="mobile-role-label">
+              <Users size={15} className="mobile-label-icon" />
+              <span>Select Portal Role:</span>
+            </label>
+            <div className="mobile-role-select-box">
+              <select
+                id="mobile-role-select"
+                className="mobile-role-dropdown"
+                value={selectedRole}
+                onChange={(e) => handleRoleChange(e.target.value)}
+              >
+                <option value="recruiter">💼 Recruiter Portal (Staffing & Sourcing)</option>
+                <option value="client">🏢 Client Portal (Hiring Partner & Shortlist)</option>
+                <option value="delivery_head">⚡ Delivery Head (SLA & Operations ROI)</option>
+                <option value="admin">🛡️ Admin & DPDP (Compliance & Governance)</option>
+              </select>
+              <ChevronDown size={15} className="mobile-select-chevron" />
+            </div>
+          </div>
+
+          {/* 4 Quick-Tap Mobile Pills: 2x2 Touch-Friendly Grid */}
+          <div className="mobile-role-pills-grid">
+            <button
+              type="button"
+              className={`mobile-role-pill ${selectedRole === 'recruiter' ? 'active pill-recruiter' : ''}`}
+              onClick={() => handleRoleChange('recruiter')}
+            >
+              <div className="mobile-pill-icon icon-recruiter">
+                <Briefcase size={16} />
+              </div>
+              <div className="pill-text-wrap">
+                <span className="pill-name">Recruiter</span>
+                <span className="pill-tag">Staffing Team</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              className={`mobile-role-pill ${selectedRole === 'client' ? 'active pill-client' : ''}`}
+              onClick={() => handleRoleChange('client')}
+            >
+              <div className="mobile-pill-icon icon-client">
+                <Building2 size={16} />
+              </div>
+              <div className="pill-text-wrap">
+                <span className="pill-name">Client</span>
+                <span className="pill-tag">Hiring Partner</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              className={`mobile-role-pill ${selectedRole === 'delivery_head' || selectedRole === 'delivery-head' ? 'active pill-delivery' : ''}`}
+              onClick={() => handleRoleChange('delivery_head')}
+            >
+              <div className="mobile-pill-icon icon-delivery">
+                <Sparkles size={16} />
+              </div>
+              <div className="pill-text-wrap">
+                <span className="pill-name">Delivery</span>
+                <span className="pill-tag">Operations</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              className={`mobile-role-pill ${selectedRole === 'admin' ? 'active pill-admin' : ''}`}
+              onClick={() => handleRoleChange('admin')}
+            >
+              <div className="mobile-pill-icon icon-admin">
+                <ShieldCheck size={16} />
+              </div>
+              <div className="pill-text-wrap">
+                <span className="pill-name">Admin</span>
+                <span className="pill-tag">Compliance</span>
+              </div>
+            </button>
+          </div>
+
+          {/* Contextual Role Helper Notice */}
+          <div className="mobile-role-help-banner">
+            <Info size={14} className="mobile-help-icon" />
+            <span>{getRoleHelpText(selectedRole)}</span>
+          </div>
+        </div>
+
+        {/* ------------------------------------------------------------- */}
+        {/* 2. DESKTOP ROLE GRID: Sleek 4-Card Selector on Tablets & PC  */}
+        {/* ------------------------------------------------------------- */}
+        <div className="desktop-role-grid">
           {/* Recruiter Door */}
           <button
             type="button"
@@ -176,14 +247,14 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
               <div className="role-icon-box role-icon-recruiter">
                 <Briefcase size={20} />
               </div>
-              <span className="role-chip chip-recruiter">Staffing</span>
+              <span className="role-chip chip-recruiter">Staffing Team</span>
             </div>
             <div className="role-card-body">
               <h3 className="role-card-title">Recruiter Portal</h3>
               <p className="role-card-desc">Scorecards, CV Ingestion, AI Scoring & Submissions</p>
             </div>
             <div className="role-card-footer">
-              <span className="role-user-hint">Sneha Verma (Recruiter)</span>
+              <span className="role-user-hint">Requires Recruiter Credentials</span>
             </div>
           </button>
 
@@ -204,7 +275,7 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
               <p className="role-card-desc">Masked Dossiers, Decisions & Interview Slots</p>
             </div>
             <div className="role-card-footer">
-              <span className="role-user-hint">Rajesh Mehra (VP Eng)</span>
+              <span className="role-user-hint">Requires Client Credentials</span>
             </div>
           </button>
 
@@ -215,17 +286,17 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
             onClick={() => handleRoleChange('delivery_head')}
           >
             <div className="role-card-header">
-              <div className="role-icon-box" style={{ background: 'rgba(139, 92, 246, 0.12)', color: '#8B5CF6' }}>
+              <div className="role-icon-box role-icon-delivery">
                 <Sparkles size={20} />
               </div>
-              <span className="role-chip" style={{ background: 'rgba(139, 92, 246, 0.12)', color: '#8B5CF6' }}>Operations</span>
+              <span className="role-chip chip-delivery">Operations</span>
             </div>
             <div className="role-card-body">
               <h3 className="role-card-title">Delivery Head</h3>
               <p className="role-card-desc">48h SLA Tracking, ROI Model & Recruiter Health</p>
             </div>
             <div className="role-card-footer">
-              <span className="role-user-hint">Arun Joshi (Delivery Head)</span>
+              <span className="role-user-hint">Requires Delivery Credentials</span>
             </div>
           </button>
 
@@ -246,12 +317,14 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
               <p className="role-card-desc">Statutory Erasure, Audit Trails & Governance</p>
             </div>
             <div className="role-card-footer">
-              <span className="role-user-hint">Dr. Vikram Malhotra</span>
+              <span className="role-user-hint">Requires Admin Credentials</span>
             </div>
           </button>
         </div>
 
-        {/* Selected Portal Sign-in Box */}
+        {/* ------------------------------------------------------------- */}
+        {/* 3. ACTIVE PORTAL SIGN-IN FORM & SCOPE PANEL                   */}
+        {/* ------------------------------------------------------------- */}
         <div className={`signin-form-box role-accent-${selectedRole}`}>
           {/* Header of Active Portal */}
           <div className="portal-box-banner">
@@ -263,22 +336,10 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
               <h2 className="portal-active-name">{activeAccount.portalName}</h2>
               <p className="portal-active-tagline">{activeAccount.portalTag}</p>
             </div>
-
-            {/* Quick Demo Button */}
-            <button
-              type="button"
-              className="quick-demo-pill-btn"
-              onClick={() => handleQuickDemoSignIn(selectedRole)}
-              disabled={isLoading}
-              title="Instantly sign in with pre-configured demo account"
-            >
-              <Sparkles size={14} />
-              <span>⚡ 1-Click Demo Sign In</span>
-            </button>
           </div>
 
           <div className="portal-box-grid">
-            {/* Left: Interactive Sign-in Form */}
+            {/* Left: Manual Sign-in Form */}
             <form onSubmit={handleSubmit} className="portal-login-form">
               {errorMessage && (
                 <div className="auth-error-banner">
@@ -290,7 +351,7 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
               {/* Identifier Input */}
               <div className="form-group">
                 <label className="form-label" htmlFor="auth-identifier">
-                  Email or Username
+                  {activeAccount.badgeText} Email or Username
                 </label>
                 <div className="input-with-icon">
                   <Mail size={16} className="input-icon" />
@@ -298,28 +359,20 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
                     id="auth-identifier"
                     type="text"
                     className="form-control"
-                    placeholder={`e.g. ${activeAccount.email} or ${activeAccount.username}`}
+                    placeholder={getPlaceholderText()}
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    autoComplete="username"
+                    autoComplete="off"
+                    autoFocus
                   />
                 </div>
               </div>
 
               {/* Password Input */}
               <div className="form-group">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label className="form-label" htmlFor="auth-password">
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    className="link-helper-btn"
-                    onClick={handleAutofill}
-                  >
-                    Autofill Credentials
-                  </button>
-                </div>
+                <label className="form-label" htmlFor="auth-password">
+                  Password
+                </label>
                 <div className="input-with-icon">
                   <KeyRound size={16} className="input-icon" />
                   <input
@@ -329,24 +382,25 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
                     placeholder="Enter account password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"
                     className="eye-toggle-btn"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex="-1"
+                    title={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
 
-              {/* Demo Hint Banner */}
-              <div className="demo-hint-box">
-                <Info size={14} />
+              {/* Security & Access Guidance */}
+              <div className="signin-security-note">
+                <Lock size={13} style={{ flexShrink: 0, color: 'var(--primary)' }} />
                 <span>
-                  Default Credentials: <strong>{activeAccount.email}</strong> • Password: <strong>{activeAccount.password}</strong>
+                  Manual entry required. Only authorized <strong>{activeAccount.badgeText}</strong> credentials can access this portal.
                 </span>
               </div>
 
@@ -356,7 +410,7 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
                 className="btn-signin-primary"
                 disabled={isLoading}
               >
-                <span>{isLoading ? 'Authenticating...' : `Sign In as ${activeAccount.badgeText}`}</span>
+                <span>{isLoading ? 'Verifying Credentials...' : `Sign In to ${activeAccount.badgeText} Portal`}</span>
                 <ArrowRight size={16} />
               </button>
             </form>
@@ -379,42 +433,13 @@ export default function SignInPortal({ onSignIn, theme, setTheme }) {
               <div className="dpdp-statutory-notice">
                 <ShieldCheck size={14} />
                 <span>
-                  Session activity is cryptographically timestamped and audited under Section 8 of the Indian DPDP Act 2023.
+                  All authentication attempts are cryptographically timestamped and audited under Section 8 of the Indian DPDP Act 2023.
                 </span>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Quick Switch Switcher for Instant Testing */}
-        <div className="signin-footer-links">
-          <span className="footer-links-label">Quick Switch Demo:</span>
-          <button
-            type="button"
-            className="quick-switch-link"
-            onClick={() => handleQuickDemoSignIn('admin')}
-          >
-            🛡️ Sign in as Admin
-          </button>
-          <span className="footer-bullet">•</span>
-          <button
-            type="button"
-            className="quick-switch-link"
-            onClick={() => handleQuickDemoSignIn('recruiter')}
-          >
-            💼 Sign in as Recruiter
-          </button>
-          <span className="footer-bullet">•</span>
-          <button
-            type="button"
-            className="quick-switch-link"
-            onClick={() => handleQuickDemoSignIn('client')}
-          >
-            🏢 Sign in as Client
-          </button>
-        </div>
       </main>
     </div>
   );
 }
-

@@ -1,10 +1,10 @@
 // BulkUploadView.jsx - Honest & Trustworthy Resume Ingestion & Processing Hub
 // Features: Truthful Parsing Status, Missing-Field Tagging, Inline Candidate Editor, and Ingestion Audit Report
 import React, { useState, useRef } from 'react';
-import { 
-  UploadCloud, 
-  CheckCircle2, 
-  AlertTriangle, 
+import {
+  UploadCloud,
+  CheckCircle2,
+  AlertTriangle,
   ArrowRight,
   Eye,
   FileText,
@@ -24,13 +24,13 @@ import {
   UserCheck
 } from 'lucide-react';
 
-export default function BulkUploadView({ 
-  candidates, 
+export default function BulkUploadView({
+  candidates,
   onAddRealCandidates,
-  onSimulateBulkUpload, 
+  onSimulateBulkUpload,
   onNavigateToRanked,
   onOpenCVDeepDive,
-  currentReq 
+  currentReq
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -104,9 +104,9 @@ export default function BulkUploadView({
     const files = Array.from(filesList);
 
     setIsProcessing(true);
-    setUploadFeedback({ 
-      status: 'parsing', 
-      message: `Reading and processing ${files.length} resume file(s) from your computer...` 
+    setUploadFeedback({
+      status: 'parsing',
+      message: `Reading and processing ${files.length} resume file(s) from your computer...`
     });
 
     const parsedCandidates = [];
@@ -124,10 +124,10 @@ export default function BulkUploadView({
       const formatLabel = isTxt ? 'Plaintext (.txt)' : isPdf ? 'PDF (Digital Document)' : isDocx ? 'DOCX (Word Document)' : 'Document File';
 
       const hasMissing = parsed.missingFields && parsed.missingFields.length > 0;
-      const status = parsed.duplicateStatus === 'EXACT_DUPLICATE_FLAGGED' 
-        ? 'DUPLICATE_QUARANTINED' 
-        : hasMissing 
-          ? 'NEEDS_REVIEW' 
+      const status = parsed.duplicateStatus === 'EXACT_DUPLICATE_FLAGGED'
+        ? 'DUPLICATE_QUARANTINED'
+        : hasMissing
+          ? 'NEEDS_REVIEW'
           : 'PARSED';
 
       newQueueItems.push({
@@ -141,8 +141,8 @@ export default function BulkUploadView({
         extractedSkills: parsed.keySkills?.length > 0 ? parsed.keySkills.join(', ') : 'Pending manual entry',
         missingFields: parsed.missingFields || [],
         isSimulated: false,
-        note: isTxt 
-          ? 'Native text parsed directly from document.' 
+        note: isTxt
+          ? 'Native text parsed directly from document.'
           : 'Binary container ingested; missing metadata flagged for review.',
         timestamp: 'Just now'
       });
@@ -308,7 +308,7 @@ export default function BulkUploadView({
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button 
+          <button
             id="export-ingestion-report-btn"
             className="btn btn-secondary btn-sm"
             onClick={handleExportIngestionReport}
@@ -318,7 +318,7 @@ export default function BulkUploadView({
             <span>Export Ingestion Audit (CSV)</span>
           </button>
 
-          <button 
+          <button
             id="view-ranked-btn"
             className="btn btn-primary btn-sm"
             onClick={onNavigateToRanked}
@@ -350,7 +350,7 @@ export default function BulkUploadView({
       </div>
 
       {/* Upload & Drag Zone */}
-      <div 
+      <div
         id="drop-zone"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -367,11 +367,11 @@ export default function BulkUploadView({
           boxShadow: varIsActive(isDragging)
         }}
       >
-        <input 
+        <input
           id="real-file-input"
           ref={fileInputRef}
-          type="file" 
-          multiple 
+          type="file"
+          multiple
           accept=".pdf,.docx,.txt"
           onChange={handleFileInputChange}
           style={{ display: 'none' }}
@@ -424,7 +424,7 @@ export default function BulkUploadView({
               <strong>Successfully Ingested {uploadFeedback.count} Resume(s):</strong> {uploadFeedback.names}
             </span>
           </div>
-          <button 
+          <button
             className="btn btn-primary btn-sm"
             onClick={onNavigateToRanked}
           >
@@ -599,9 +599,9 @@ export default function BulkUploadView({
       {/* Manual Review & Candidate Editor Modal */}
       {editModalCandidate && (
         <div className="modal-backdrop" onClick={() => setEditModalCandidate(null)}>
-          <div 
-            className="modal-content" 
-            onClick={(e) => e.stopPropagation()} 
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: '580px', width: '95%' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--border-default)', paddingBottom: '12px' }}>
@@ -613,7 +613,7 @@ export default function BulkUploadView({
                   ID: {editModalCandidate.id} • Ensure DPDP accuracy before saving to active pool
                 </span>
               </div>
-              <button 
+              <button
                 className="icon-action-btn"
                 onClick={() => setEditModalCandidate(null)}
               >
@@ -688,9 +688,9 @@ export default function BulkUploadView({
                   type="text"
                   className="form-control"
                   value={Array.isArray(editModalCandidate.keySkills) ? editModalCandidate.keySkills.join(', ') : editModalCandidate.keySkills || ''}
-                  onChange={(e) => setEditModalCandidate({ 
-                    ...editModalCandidate, 
-                    keySkills: e.target.value.split(',').map(s => s.trim()).filter(Boolean) 
+                  onChange={(e) => setEditModalCandidate({
+                    ...editModalCandidate,
+                    keySkills: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                   })}
                   placeholder="e.g. Core Java, Spring Boot, Microservices, PostgreSQL"
                 />
@@ -805,7 +805,7 @@ async function parseResumeFile(file, index, baseId, existingPool, currentReq) {
   }
 
   // Duplicate Check against existing candidate pool
-  const isDuplicate = existingPool.some(c => 
+  const isDuplicate = existingPool.some(c =>
     (email && c.email && c.email.toLowerCase() === email.toLowerCase()) ||
     (phone && c.phone && c.phone.replace(/\D/g, '').endsWith(phone.replace(/\D/g, '').slice(-10)))
   );

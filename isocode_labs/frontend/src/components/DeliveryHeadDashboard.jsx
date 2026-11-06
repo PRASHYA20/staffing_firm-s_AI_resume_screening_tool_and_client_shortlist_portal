@@ -1,14 +1,14 @@
 // DeliveryHeadDashboard.jsx - Clean Governance, Bias Audit & Three-Tier ROI Suite
 // Features: Delineated Client Assumptions, Simulated Benchmark Projections, and Live Measured Session Metrics
 import React, { useState } from 'react';
-import { 
-  ShieldCheck, 
-  Trash2, 
-  CheckCircle2, 
-  Download, 
-  TrendingUp, 
-  DollarSign, 
-  Clock, 
+import {
+  ShieldCheck,
+  Trash2,
+  CheckCircle2,
+  Download,
+  TrendingUp,
+  DollarSign,
+  Clock,
   AlertTriangle,
   Info,
   Layers,
@@ -20,11 +20,11 @@ import {
 } from 'lucide-react';
 import { WEEKLY_BIAS_AUDIT_DATA } from '../data/sampleData';
 
-export default function DeliveryHeadDashboard({ 
-  currentReq, 
-  candidates = [], 
-  auditLogs = [], 
-  onDeleteCandidateDPDP 
+export default function DeliveryHeadDashboard({
+  currentReq,
+  candidates = [],
+  auditLogs = [],
+  onDeleteCandidateDPDP
 }) {
   const [subView, setSubView] = useState('ROI'); // ROI, BIAS_AUDIT, DPDP_LOGS
   const [selectedWeek, setSelectedWeek] = useState(WEEKLY_BIAS_AUDIT_DATA[0]);
@@ -134,7 +134,7 @@ export default function DeliveryHeadDashboard({
       {/* SubView 1: Economic ROI & Goals */}
       {subView === 'ROI' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          
+
           {/* SECTION A: Client-Provided Baseline Assumptions */}
           <div className="clean-card" style={{ padding: '18px 22px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
@@ -185,10 +185,10 @@ export default function DeliveryHeadDashboard({
               </div>
             </div>
 
-            <div style={{ 
-              background: 'var(--primary-light)', 
-              border: '1px solid var(--primary-border)', 
-              borderRadius: 'var(--radius-sm)', 
+            <div style={{
+              background: 'var(--primary-light)',
+              border: '1px solid var(--primary-border)',
+              borderRadius: 'var(--radius-sm)',
               padding: '10px 16px',
               fontSize: '0.8rem',
               color: 'var(--primary)',
@@ -231,8 +231,8 @@ export default function DeliveryHeadDashboard({
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span className="badge badge-neutral" style={{ fontSize: '0.64rem' }}>[Simulated Projection]</span>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => setActiveMetricExplainer('VALUE_RECOVERED')}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', padding: 0 }}
                       title="Explain this metric"
@@ -256,8 +256,8 @@ export default function DeliveryHeadDashboard({
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span className="badge badge-neutral" style={{ fontSize: '0.64rem' }}>[Simulated Projection]</span>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => setActiveMetricExplainer('SLA_48H')}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', padding: 0 }}
                       title="Explain 48h SLA Turnaround"
@@ -281,8 +281,8 @@ export default function DeliveryHeadDashboard({
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span className="badge badge-primary" style={{ fontSize: '0.64rem' }}>[Target Model]</span>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => setActiveMetricExplainer('VALUE_RECOVERED')}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', padding: 0 }}
                       title="Explain Value Recovered"
@@ -351,8 +351,8 @@ export default function DeliveryHeadDashboard({
               <div style={{ background: 'var(--bg-app)', padding: '14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Live Recruiter Overrides</div>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setActiveMetricExplainer('OVERRIDES')}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}
                     title="Explain Overrides"
@@ -394,8 +394,8 @@ export default function DeliveryHeadDashboard({
             <div style={{ background: 'var(--bg-app)', padding: '14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Human-AI Rank Agreement</div>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setActiveMetricExplainer('RANK_AGREEMENT')}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}
                   title="Explain Rank Agreement"
@@ -412,8 +412,8 @@ export default function DeliveryHeadDashboard({
             <div style={{ background: 'var(--bg-app)', padding: '14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Human Overrides</div>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setActiveMetricExplainer('OVERRIDES')}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}
                   title="Explain Overrides"
@@ -430,8 +430,8 @@ export default function DeliveryHeadDashboard({
             <div style={{ background: 'var(--bg-app)', padding: '14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Demographic Parity Ratio</div>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setActiveMetricExplainer('DEMOGRAPHIC_PARITY')}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}
                   title="Explain Demographic Parity"
@@ -550,8 +550,8 @@ export default function DeliveryHeadDashboard({
       {/* Plain-English Metric Explainer Modal */}
       {activeMetricExplainer && METRIC_EXPLAINERS[activeMetricExplainer] && (
         <div className="modal-backdrop" onClick={() => setActiveMetricExplainer(null)}>
-          <div 
-            className="modal-content" 
+          <div
+            className="modal-content"
             style={{ maxWidth: '520px', padding: '24px' }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -564,8 +564,8 @@ export default function DeliveryHeadDashboard({
                   {METRIC_EXPLAINERS[activeMetricExplainer].title}
                 </h3>
               </div>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setActiveMetricExplainer(null)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
               >
@@ -612,8 +612,8 @@ export default function DeliveryHeadDashboard({
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="btn btn-primary btn-sm"
                 onClick={() => setActiveMetricExplainer(null)}
               >

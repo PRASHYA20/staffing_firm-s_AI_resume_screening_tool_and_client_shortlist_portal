@@ -19,17 +19,21 @@ import {
   Check, 
   Info,
   DollarSign,
-  Briefcase
+  Briefcase,
+  Sparkles
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import ClientAiAssistant from './ClientAiAssistant';
 
 export default function ClientPortalView({ 
   candidates, 
   onClientShortlist, 
   onClientReject, 
   onProposeInterview,
-  currentReq 
+  currentReq,
+  currentUser
 }) {
+  const [showAiAssistant, setShowAiAssistant] = useState(true);
   const [phoneMode, setPhoneMode] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
   const [compareModalOpen, setCompareModalOpen] = useState(false);
@@ -134,6 +138,19 @@ export default function ClientPortalView({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            id="btn-toggle-ai-assistant"
+            className={`btn ${showAiAssistant ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={() => setShowAiAssistant(!showAiAssistant)}
+            style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+            title="Toggle Aria – Client AI Assistant"
+          >
+            <Sparkles size={13} className={showAiAssistant ? 'pulse-icon' : ''} />
+            <span className="ai-btn-text-full">{showAiAssistant ? 'Close Aria' : '✨ Ask Aria'}</span>
+            <span className="ai-btn-text-short">{showAiAssistant ? 'Close' : '✨ Aria'}</span>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10B981', display: 'inline-block' }} />
+          </button>
+
           {selectedForCompare.length >= 2 && (
             <button
               id="btn-open-compare"
@@ -161,16 +178,32 @@ export default function ClientPortalView({
       {phoneMode ? (
         /* Mobile Simulator Phone */
         <div style={{ padding: '10px 0' }}>
-          <div className="phone-simulator-wrapper">
+          <div className="phone-simulator-wrapper" style={{ position: 'relative' }}>
             <div className="phone-top-notch">
               <div className="phone-speaker"></div>
             </div>
-            <div style={{ padding: '16px', maxHeight: '680px', overflowY: 'auto' }}>
-              <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600, marginBottom: '2px' }}>
-                CLIENT SHORTLIST PORTAL
-              </div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '14px' }}>
-                {currentReq.title}
+            <div style={{ padding: '14px 12px', maxHeight: '740px', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600, marginBottom: '2px' }}>
+                    CLIENT SHORTLIST PORTAL
+                  </div>
+                  <div style={{ fontSize: '0.92rem', fontWeight: 700 }}>
+                    {currentReq.title}
+                  </div>
+                </div>
+
+                {/* In-Phone Aria Assistant Toggle */}
+                <button
+                  id="phone-btn-toggle-ai"
+                  className={`btn ${showAiAssistant ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                  onClick={() => setShowAiAssistant(!showAiAssistant)}
+                  style={{ fontSize: '0.7rem', padding: '3px 8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  title="Toggle Aria Assistant"
+                >
+                  <Sparkles size={11} className={showAiAssistant ? 'pulse-icon' : ''} />
+                  <span>{showAiAssistant ? 'Close' : '✨ Aria'}</span>
+                </button>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -189,43 +222,73 @@ export default function ClientPortalView({
                 ))}
               </div>
             </div>
+
+            {/* In-Phone Aria Floating Launcher & Mobile Overlay */}
+            <ClientAiAssistant
+              currentReq={currentReq}
+              currentUser={currentUser}
+              onSelectCandidate={(candId) => {
+                const found = candidates.find(c => c.id === candId);
+                if (found) setDrawerCandidate(found);
+              }}
+              isOpen={showAiAssistant}
+              onToggle={() => setShowAiAssistant(!showAiAssistant)}
+              onClose={() => setShowAiAssistant(false)}
+              isPhoneSimulator={true}
+            />
           </div>
         </div>
       ) : (
         /* Desktop Cards */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {submittedCandidates.length === 0 ? (
-            <div className="clean-card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px auto' }}>
-                <UserCheck size={22} />
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {submittedCandidates.length === 0 ? (
+              <div className="clean-card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px auto' }}>
+                  <UserCheck size={22} />
+                </div>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
+                  No Candidate Dossiers Submitted Yet
+                </h3>
+                <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto 12px auto', lineHeight: 1.5 }}>
+                  Our talent delivery team is currently screening the resume pool against your scorecard criteria. Each candidate undergoes human recruiter verification before submission.
+                </p>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.76rem', color: 'var(--primary)', background: 'var(--bg-subtle)', padding: '6px 12px', borderRadius: 'var(--radius-full)' }}>
+                  <ShieldCheck size={14} />
+                  <span>48h SLA & DPDP Act 2023 PII Masking Active</span>
+                </div>
               </div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
-                No Candidate Dossiers Submitted Yet
-              </h3>
-              <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto 12px auto', lineHeight: 1.5 }}>
-                Our talent delivery team is currently screening the resume pool against your scorecard criteria. Each candidate undergoes human recruiter verification before submission.
-              </p>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.76rem', color: 'var(--primary)', background: 'var(--bg-subtle)', padding: '6px 12px', borderRadius: 'var(--radius-full)' }}>
-                <ShieldCheck size={14} />
-                <span>48h SLA & DPDP Act 2023 PII Masking Active</span>
-              </div>
-            </div>
-          ) : (
-            submittedCandidates.map(c => (
-              <ClientCandidateCard
-                key={c.id}
-                candidate={c}
-                isSelectedForCompare={selectedForCompare.includes(c.id)}
-                onToggleCompare={() => toggleCompare(c.id)}
-                onShortlist={() => handleShortlist(c)}
-                onOpenReject={() => handleOpenRejectModal(c)}
-                onOpenInterview={() => handleOpenInterviewModal(c)}
-                onViewProfile={() => setDrawerCandidate(c)}
-                isMobile={false}
-              />
-            ))
-          )}
-        </div>
+            ) : (
+              submittedCandidates.map(c => (
+                <ClientCandidateCard
+                  key={c.id}
+                  candidate={c}
+                  isSelectedForCompare={selectedForCompare.includes(c.id)}
+                  onToggleCompare={() => toggleCompare(c.id)}
+                  onShortlist={() => handleShortlist(c)}
+                  onOpenReject={() => handleOpenRejectModal(c)}
+                  onOpenInterview={() => handleOpenInterviewModal(c)}
+                  onViewProfile={() => setDrawerCandidate(c)}
+                  isMobile={false}
+                />
+              ))
+            )}
+          </div>
+
+          {/* Desktop Floating Aria Assistant: Circular button at bottom-right */}
+          <ClientAiAssistant
+            currentReq={currentReq}
+            currentUser={currentUser}
+            onSelectCandidate={(candId) => {
+              const found = candidates.find(c => c.id === candId);
+              if (found) setDrawerCandidate(found);
+            }}
+            isOpen={showAiAssistant}
+            onToggle={() => setShowAiAssistant(!showAiAssistant)}
+            onClose={() => setShowAiAssistant(false)}
+            isPhoneSimulator={false}
+          />
+        </>
       )}
 
       {/* Floating Compare Toolbar (When 2+ Candidates Selected) */}

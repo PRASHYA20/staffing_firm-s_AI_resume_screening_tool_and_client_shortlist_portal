@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { extractScorecardFromJD } from '../frontend/src/utils/aiEngine.js';
+import { processClientAssistantQuery } from './clientAiAssistant.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -178,14 +179,14 @@ app.post('/api/auth/login', (req, res) => {
   if (!isEmailMatch && !isUserMatch) {
     return res.status(401).json({
       success: false,
-      message: `Account not found for ${account.badgeText}. Try "${account.email}" or username "${account.username}".`
+      message: `Account not found for ${account.badgeText}. Please verify the entered email or username.`
     });
   }
 
   if (cleanPass !== account.password) {
     return res.status(401).json({
       success: false,
-      message: `Incorrect password for ${account.badgeText}. Demo password is "${account.password}".`
+      message: `Incorrect password for ${account.badgeText}. Please check your credentials.`
     });
   }
 
@@ -487,6 +488,64 @@ app.post('/api/candidates/:id/erase', (req, res) => {
 app.get('/api/audit-logs', (req, res) => {
   const db = getDB();
   res.json({ success: true, logs: db.auditLogs });
+});
+
+// 10. TalentPulse Client AI Assistant Endpoints
+app.get('/api/client-ai/status', (req, res) => {
+  res.json({
+    success: true,
+    status: 'ONLINE',
+    engine: process.env.GEMINI_API_KEY ? 'Google Gemini 1.5 Flash (Grounded in db.json)' : 'TalentPulse Hybrid Grounded Engine',
+    piiMaskingActive: true,
+    dpdpCompliant: true,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/client-ai/chat', async (req, res) => {
+  try {
+    const { message, query, clientSession, currentReqId, conversationHistory } = req.body;
+    const q = message || query;
+    const db = getDB();
+
+    const result = await processClientAssistantQuery({
+      query: q,
+      clientSession,
+      currentReqId,
+      conversationHistory,
+      db
+    });
+
+    // Record compliance audit log if user session provided
+    if (clientSession && clientSession.name) {
+      db.auditLogs.unshift({
+        id: `LOG-${Date.now().toString().slice(-5)}`,
+        timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST',
+        actorName: clientSession.name,
+        actorRole: clientSession.badgeText || 'Client Hiring Partner',
+        actorIP: clientSession.ip || '14.141.112.5 (Client Corporate Gateway)',
+        candidateId: 'CLIENT-AI-ASSISTANT',
+        candidateName: 'Natural Language Query',
+        action: 'AI_ASSISTANT_QUERY',
+        details: `Client queried: "${(q || '').slice(0, 60)}..." [Engine: ${result.engine}]`,
+        complianceFlag: 'COMPLIANT_QUERY_BOUNDED'
+      });
+      saveDB(db);
+    }
+
+    if (!result.success && result.statusCode) {
+      return res.status(result.statusCode).json(result);
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error('[ClientAI] Error handling chat query:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error processing Client AI query.',
+      message: err.message
+    });
+  }
 });
 
 // Start Server

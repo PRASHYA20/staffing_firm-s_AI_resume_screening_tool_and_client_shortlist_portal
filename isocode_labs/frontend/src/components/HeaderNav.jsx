@@ -270,7 +270,7 @@ export default function HeaderNav({
               </div>
 
               <div className="dropdown-divider" />
-              <div className="dropdown-section-label">Switch Sign-In Portal</div>
+              <div className="dropdown-section-label">Switch Portal (Manual Authentication)</div>
 
               {Object.values(DEMO_ACCOUNTS).map(acc => (
                 <button
@@ -281,11 +281,12 @@ export default function HeaderNav({
                     setShowSwitchMenu(false);
                     onSwitchRole(acc.role);
                   }}
+                  title={`Sign out and open ${acc.portalName}`}
                 >
                   <div className={`dropdown-role-dot dot-${acc.role}`} />
                   <div className="dropdown-role-meta">
                     <span className="dropdown-role-title">{acc.portalName}</span>
-                    <span className="dropdown-role-user">{acc.name} ({acc.badgeText})</span>
+                    <span className="dropdown-role-user">Sign in with {acc.badgeText} credentials</span>
                   </div>
                   {acc.role === role && <span className="current-badge">Active</span>}
                 </button>

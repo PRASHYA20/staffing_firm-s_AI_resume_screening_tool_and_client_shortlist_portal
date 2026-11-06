@@ -104,7 +104,9 @@ export const AUTH_STORAGE_KEY = 'talentpulse_active_user_v1';
 
 export function getStoredSession() {
   try {
-    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    // Clear any old permanent localStorage session so fresh loads require manual sign-in
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    const raw = sessionStorage.getItem(AUTH_STORAGE_KEY);
     if (!raw) return null;
     return JSON.parse(raw);
   } catch (err) {
@@ -115,7 +117,7 @@ export function getStoredSession() {
 
 export function setStoredSession(user) {
   try {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+    sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
   } catch (err) {
     console.warn('Failed to persist user session:', err);
   }
@@ -123,6 +125,7 @@ export function setStoredSession(user) {
 
 export function clearStoredSession() {
   try {
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
     localStorage.removeItem(AUTH_STORAGE_KEY);
   } catch (err) {
     console.warn('Failed to clear user session:', err);
@@ -154,21 +157,21 @@ export function authenticateUserLocally(portalRole, identifier, password) {
   if (matchedOther) {
     return {
       success: false,
-      message: `Access Denied: This account belongs to the "${matchedOther.badgeText}" role. Please switch to the ${matchedOther.portalName} to sign in.`
+      message: `Access Denied: These credentials belong to the "${matchedOther.badgeText}" role. Please switch to the ${matchedOther.portalName} to sign in.`
     };
   }
 
   if (!isEmailMatch && !isUserMatch) {
     return {
       success: false,
-      message: `Invalid email or username for ${account.badgeText}. Try "${account.email}" or "${account.username}".`
+      message: `Invalid email or username for ${account.badgeText}. Please check the credentials entered.`
     };
   }
 
   if (cleanPass !== account.password) {
     return {
       success: false,
-      message: `Incorrect password. (Hint: demo password is "${account.password}")`
+      message: `Incorrect password for ${account.badgeText}. Please check your password.`
     };
   }
 
